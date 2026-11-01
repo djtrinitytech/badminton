@@ -1,5 +1,7 @@
 # VYŪHA 2026 — Badminton
 
+hello
+
 A mobile-first tournament scoreboard for DJSCE Trinity. Public courts, fixtures, standings and knockout brackets; password-only admin scoring. Built for Vercel with Next.js and the **Supabase JavaScript API + Supabase Realtime**. No Supabase Auth, usernames, Neon, Ably or direct database connection is required.
 
 ## Run locally
