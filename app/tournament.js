@@ -227,7 +227,7 @@ export default function Tournament() {
     [retry, setRetry] = useState(null);
   const stateRef = useRef(null),
     busyRef = useRef(false),
-    ablyRef = useRef(null),
+    realtimeRef = useRef(null),
     refetchRef = useRef(null);
   const accept = useCallback((next) => {
     if (!stateRef.current || next.revision >= stateRef.current.revision) {
@@ -275,25 +275,50 @@ export default function Tournament() {
   useEffect(() => {
     if (!real) return;
     let disposed = false;
-    import("ably").then(({ Realtime }) => {
-      if (disposed) return;
-      const client = new Realtime({
-        authUrl: "/api/realtime",
-        autoConnect: true,
+    Promise.all([
+      import("@supabase/supabase-js"),
+      fetch("/api/realtime").then(async (response) => {
+        if (!response.ok) throw new Error("Realtime unavailable");
+        return response.json();
+      }),
+    ])
+      .then(([{ createClient }, config]) => {
+        if (disposed) return;
+        const client = createClient(config.url, config.publishableKey, {
+          auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+            detectSessionInUrl: false,
+          },
+        });
+        realtimeRef.current = client;
+        client
+          .channel("vyuha-public-scores")
+          .on(
+            "postgres_changes",
+            {
+              event: "UPDATE",
+              schema: "public",
+              table: "vyuha_updates",
+              filter: "id=eq.1",
+            },
+            () => {
+              clearTimeout(refetchRef.current);
+              refetchRef.current = setTimeout(load, 35);
+            },
+          )
+          .subscribe((status) => {
+            if (disposed) return;
+            setConnected(status === "SUBSCRIBED");
+            if (status === "SUBSCRIBED") load();
+          });
+      })
+      .catch(() => {
+        if (!disposed) setConnected(false);
       });
-      ablyRef.current = client;
-      client.connection.on((change) => {
-        if (!disposed) setConnected(change.current === "connected");
-      });
-      client.channels.get("vyuha:scores").subscribe("updated", () => {
-        clearTimeout(refetchRef.current);
-        refetchRef.current = setTimeout(load, 35);
-      });
-      client.connection.on("connected", load);
-    });
     return () => {
       disposed = true;
-      ablyRef.current?.close();
+      realtimeRef.current?.removeAllChannels();
       clearTimeout(refetchRef.current);
     };
   }, [real, load]);
@@ -510,7 +535,7 @@ export default function Tournament() {
         {storage === "local" && (
           <div className="demo-strip">
             <Info size={14} /> Local preview · Scores are stored on this
-            computer. Connect Postgres and Ably before deploying.
+            computer. Connect Supabase before deploying.
           </div>
         )}
         <section className={`hero ${tab !== "live" ? "compact" : ""}`}>
