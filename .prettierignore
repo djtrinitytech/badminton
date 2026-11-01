@@ -1,0 +1,9 @@
+node_modules
+.next
+.npm-cache
+.data
+.env*
+tmp
+package-lock.json
+data/schedule.json
+AGENTS.md

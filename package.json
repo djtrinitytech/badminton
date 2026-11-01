@@ -1,0 +1,26 @@
+{
+  "name": "vyuha-badminton",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev": "next dev --hostname 0.0.0.0",
+    "build": "next build",
+    "start": "next start --hostname 0.0.0.0",
+    "test": "node --test --experimental-test-isolation=none tests/*.test.mjs",
+    "test:api": "node scripts/smoke-api.mjs"
+  },
+  "dependencies": {
+    "ably": "^2.10.0",
+    "lucide-react": "^0.468.0",
+    "next": "^16.4.3",
+    "pg": "^8.16.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "prettier": "^3.9.10"
+  }
+}
