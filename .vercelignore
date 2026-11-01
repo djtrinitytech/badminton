@@ -1,0 +1,12 @@
+.git
+.next
+.npm-cache
+.data
+.env*
+node_modules
+tmp
+output
+tests
+scripts/import-schedule.py
+scripts/smoke-api.mjs
+*.log

@@ -3,10 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "engines": {
-    "node": ">=22.13.0"
+    "node": "22.x"
   },
   "scripts": {
     "dev": "next dev --hostname 0.0.0.0",
+    "prebuild": "node scripts/check-deployment.mjs",
     "build": "next build",
     "start": "next start --hostname 0.0.0.0",
     "test": "node --test --experimental-test-isolation=none tests/*.test.mjs",

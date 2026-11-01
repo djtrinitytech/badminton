@@ -1,6 +1,9 @@
 export default {
   poweredByHeader: false,
   devIndicators: false,
+  outputFileTracingExcludes: {
+    "/*": ["./.data/**/*", "./.env*", "./tmp/**/*", "./output/**/*"],
+  },
   async headers() {
     return [
       {

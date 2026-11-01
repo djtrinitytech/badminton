@@ -6,7 +6,7 @@ A mobile-first tournament scoreboard for DJSCE Trinity. Public courts, fixtures,
 
 ## Run locally
 
-Requires Node.js 22.13 or newer.
+Use Node.js **22.x** (22.13 or newer within that release line). The repository includes `.nvmrc` and pins the Vercel runtime through `package.json`.
 
 1. `npm install`
 2. Copy `.env.example` to `.env.local`.
@@ -18,7 +18,7 @@ The local JSON store is deliberately disabled on Vercel and in production. Produ
 
 ## Deploy on Vercel
 
-1. Push this directory to a Git repository and import it into Vercel. Framework preset: **Next.js**. Build: `npm run build`. Node: **22.x or newer**.
+1. Import **[djtrinitytech/badminton](https://github.com/djtrinitytech/badminton)** into Vercel. Root Directory: **repository root** (leave the default). The checked-in `vercel.json` sets the **Next.js** framework, `npm ci` install command, `npm run build` build command, and 30-second API function limit. Node.js is pinned to **22.x**. Leave **Output Directory** at the Next.js default; do not select `public`, `dist`, or a static export. No custom start command or rewrites are needed.
 2. Create or open a Supabase project. Run the **entire [supabase/setup.sql](supabase/setup.sql)** in Supabase → SQL Editor as `postgres`. It creates tables, private mutation RPCs, RLS rules and the Realtime publication. It is safe to rerun and preserves existing tournament results. Keep the standard `public` schema enabled in the Supabase Data API.
 3. In Supabase **Project Settings → Data API**, copy the **Project URL**. In **Project Settings → API Keys**, copy a **publishable key** (`sb_publishable_...`) and create/copy a backend **secret key** (`sb_secret_...`). Legacy `anon` and `service_role` keys also work in their corresponding variables. The browser uses only the publishable/anon key. Supabase Auth can remain unused; do not create admin users there.
 4. Add these environment variables in Vercel → Project → Settings → Environment Variables:
@@ -33,11 +33,13 @@ The local JSON store is deliberately disabled on Vercel and in production. Produ
 
    Keep these exact names. Do not set `LOCAL_DEMO` on Vercel. Remove obsolete `DATABASE_URL` and `ABLY_API_KEY`; the app no longer uses them. Vercel preview deployments should use a **separate Supabase project** so preview scoring never changes tournament results. Never put the secret/service_role key in a `NEXT_PUBLIC_` variable or commit it to Git.
 
-5. Deploy (or redeploy after changing variables). The first successful data request imports the fixed schedule via a private seed RPC, only when no tournament exists. There is no manual data insertion step and redeploying preserves results. The SQL setup must be run before this request.
+5. Deploy (or redeploy after changing variables). Set all five variables for the Vercel environment you are deploying (Production or Preview). The Vercel build checks required variables and key types before compiling; errors name missing/invalid variables without displaying their values. Local `npm run build` still works without remote credentials. The first successful data request imports the fixed schedule via a private seed RPC, only when no tournament exists. There is no manual data insertion step and redeploying preserves results. The SQL setup must be run before this request.
 6. In Vercel Deployment Protection, allow public access to the production site so spectators do not need a Vercel account. The app itself protects admin mutations with a signed, HTTP-only session cookie.
 7. Test on two phones: open the public site on one, sign in and score on the other. Check that each tap broadcasts and that a second admin device cannot score the same active match.
 
 `npm run build` produces the production build. No Supabase account/project or Vercel deployment has been created or configured remotely by this repository. You must enter your project's values and execute the SQL in your account.
+
+The `.vercelignore` also excludes local environment files, local score data, dependency caches and test artifacts when deploying through the Vercel CLI. Local demo storage cannot be enabled in a Vercel runtime. Supabase receives every production score write over HTTPS; no writable filesystem or persistent Node process is required. Choose the Vercel function region nearest your Supabase project in Vercel's settings.
 
 ## Tournament rules and imported fixtures
 
