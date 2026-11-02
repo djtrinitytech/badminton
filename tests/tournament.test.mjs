@@ -207,13 +207,27 @@ test("league fixtures immutable and league byes disallowed", () => {
     /Byes apply to knockouts/,
   );
 });
-test("published scheduling collisions are blocked at match start", () => {
+test("participant scheduling collisions are blocked at match start", () => {
   const s = initialState();
   op(s, { type: "start", matchId: "XD-A2" });
   assert.throws(
     () => op(s, { type: "start", matchId: "XD-A3" }),
     /already in another live match/,
   );
+});
+
+test("an occupied court does not block starting or resuming another match", () => {
+  const s = initialState();
+  const first = s.matches.find((m) => m.id === "MD-A3");
+  const second = s.matches.find((m) => m.id === "MS-B3");
+  assert.equal(first.court, second.court);
+  op(s, { type: "start", matchId: first.id }, "phone-a");
+  op(s, { type: "start", matchId: second.id }, "phone-b");
+  assert.equal(first.status, "live");
+  assert.equal(second.status, "live");
+  op(s, { type: "claim", matchId: second.id }, "phone-c", 1001 + LEASE_MS);
+  assert.equal(second.lock.owner, "phone-c");
+  assert.equal(first.status, "live");
 });
 test("public payload hides device ownership, audit and operation identifiers", () => {
   const s = initialState();

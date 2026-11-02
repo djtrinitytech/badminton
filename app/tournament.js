@@ -735,96 +735,108 @@ export default function Tournament() {
             {tab === "live" && (
               <>
                 <div className="court-grid">
-                  {[1, 2, 3, 4].map((court) => {
-                    const onCourt = state.matches.find(
-                      (m) => m.court === court && m.status === "live",
-                    );
-                    const next = state.matches.find(
-                      (m) =>
-                        m.court === court &&
-                        m.status === "scheduled" &&
-                        (category === "all" || m.category === category),
-                    );
-                    const m = onCourt || next;
-                    return (
-                      <article
-                        className={`court-card ${onCourt ? "is-live" : ""}`}
-                        key={court}
-                      >
-                        <div className="court-card-top">
-                          <span className="court-title">
-                            <span className="court-number">0{court}</span> COURT{" "}
-                            {court}
-                          </span>
-                          {onCourt ? (
-                            <Status match={onCourt} />
-                          ) : (
-                            <span className="court-ready">Ready for play</span>
-                          )}
-                        </div>
-                        {m ? (
-                          <>
-                            <div className="match-category">
-                              <span>{m.category}</span>
-                              {CATEGORIES[m.category]}
-                              <b>·</b>
-                              {m.stage === "league"
-                                ? `Group ${m.group}`
-                                : "Knockout"}
-                            </div>
-                            <div className="score-rows">
-                              {["a", "b"].map((side) => (
-                                <div
-                                  key={side}
-                                  className={`score-row ${m.winner === m[side] ? "winner" : ""}`}
-                                >
-                                  <span className="player-name">
-                                    {entrant(m[side])?.players.map((n, i) => (
-                                      <span key={i}>{n}</span>
-                                    )) || "To be decided"}
-                                  </span>
-                                  <strong>
-                                    {m[side === "a" ? "scoreA" : "scoreB"]}
-                                  </strong>
-                                </div>
-                              ))}
-                            </div>
-                            <div className="court-card-bottom">
-                              <span>
-                                {onCourt ? (
-                                  <>
-                                    <span className="pulse-dot" />
-                                    Scoring in progress
-                                  </>
-                                ) : (
-                                  <>
-                                    <Clock3 size={13} />
-                                    {m.time}
-                                  </>
-                                )}
+                  {[1, 2, 3, 4]
+                    .flatMap((court) => {
+                      const live = state.matches.filter(
+                        (m) =>
+                          m.court === court &&
+                          m.status === "live" &&
+                          (category === "all" || m.category === category),
+                      );
+                      const next = state.matches.find(
+                        (m) =>
+                          m.court === court &&
+                          m.status === "scheduled" &&
+                          (category === "all" || m.category === category),
+                      );
+                      return (live.length ? live : [next]).map((m) => ({
+                        court,
+                        m,
+                      }));
+                    })
+                    .map(({ court, m }) => {
+                      const onCourt = m?.status === "live" ? m : null;
+                      return (
+                        <article
+                          className={`court-card ${onCourt ? "is-live" : ""}`}
+                          key={m?.id || `court-${court}`}
+                        >
+                          <div className="court-card-top">
+                            <span className="court-title">
+                              <span className="court-number">0{court}</span>{" "}
+                              COURT {court}
+                            </span>
+                            {onCourt ? (
+                              <Status match={onCourt} />
+                            ) : (
+                              <span className="court-ready">
+                                Ready for play
                               </span>
-                              <button onClick={() => setSelected(m.id)}>
-                                {admin
-                                  ? m.lock?.mine
-                                    ? "Score match"
-                                    : onCourt
-                                      ? "View match"
-                                      : "Start match"
-                                  : "Match details"}
-                                <ArrowUpRight size={16} />
-                              </button>
-                            </div>
-                          </>
-                        ) : (
-                          <div className="court-empty">
-                            <Shuttle />
-                            <p>A little breather.</p>
-                            <small>No upcoming match in this category.</small>
+                            )}
                           </div>
-                        )}
-                      </article>
-                    );
-                  })}
+                          {m ? (
+                            <>
+                              <div className="match-category">
+                                <span>{m.category}</span>
+                                {CATEGORIES[m.category]}
+                                <b>·</b>
+                                {m.stage === "league"
+                                  ? `Group ${m.group}`
+                                  : "Knockout"}
+                              </div>
+                              <div className="score-rows">
+                                {["a", "b"].map((side) => (
+                                  <div
+                                    key={side}
+                                    className={`score-row ${m.winner === m[side] ? "winner" : ""}`}
+                                  >
+                                    <span className="player-name">
+                                      {entrant(m[side])?.players.map((n, i) => (
+                                        <span key={i}>{n}</span>
+                                      )) || "To be decided"}
+                                    </span>
+                                    <strong>
+                                      {m[side === "a" ? "scoreA" : "scoreB"]}
+                                    </strong>
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="court-card-bottom">
+                                <span>
+                                  {onCourt ? (
+                                    <>
+                                      <span className="pulse-dot" />
+                                      Scoring in progress
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Clock3 size={13} />
+                                      {m.time}
+                                    </>
+                                  )}
+                                </span>
+                                <button onClick={() => setSelected(m.id)}>
+                                  {admin
+                                    ? m.lock?.mine
+                                      ? "Score match"
+                                      : onCourt
+                                        ? "View match"
+                                        : "Start match"
+                                    : "Match details"}
+                                  <ArrowUpRight size={16} />
+                                </button>
+                              </div>
+                            </>
+                          ) : (
+                            <div className="court-empty">
+                              <Shuttle />
+                              <p>A little breather.</p>
+                              <small>No upcoming match in this category.</small>
+                            </div>
+                          )}
+                        </article>
+                      );
+                    })}
                 </div>
                 <div className="section-subheading">
                   <h3>
@@ -917,8 +929,8 @@ export default function Tournament() {
                 <div className="fixture-note">
                   <Info size={14} />
                   <span>
-                    Published times are retained. Matches sharing a court or
-                    player cannot start simultaneously.
+                    Published times are retained. Court assignments do not block
+                    starting a match. A player can only be in one live match.
                     {admin
                       ? " League fixtures are fixed; knockout fixtures can be edited."
                       : ""}
